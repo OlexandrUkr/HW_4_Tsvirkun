@@ -6,13 +6,13 @@ def decorator(func):
     def wrap(user_id, company_id):
         with open("users_db.json", "r") as file:
             dict_users = json.load(file)
-        try:
+        if dict_users.get(user_id) is not None:
             companies = dict_users[user_id]['companies']
-        except KeyError:
-            return exceptions.NotFound
+        else:
+            raise exceptions.NotFound("User not found.")
         company_id_int = int(company_id)
         if company_id_int not in companies:
-            return exceptions.NoAccess
+            raise exceptions.NoAccess(f"User ({user_id}) not have access to company ({company_id}).")
         return func(company_id)
     return wrap
 
@@ -29,7 +29,7 @@ def exception_handler(func):
             elif temp == exceptions.NotFound:
                 pass
             else:
-                return func(*args)
+                return temp
     return wrap
 
 
@@ -38,7 +38,7 @@ def exception_handler(func):
 def get_company_city(company_id):
     with open("company_db.json", "r") as file:
         dict_comp = json.load(file)
-    try:
+    if dict_comp.get(company_id) is not None:
         return dict_comp[company_id]['city']
-    except KeyError:
-        return exceptions.NotFound
+    else:
+        raise exceptions.NotFound("Company not found.")
